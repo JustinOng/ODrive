@@ -167,6 +167,22 @@ void ASCII_protocol_process_line(const uint8_t* buffer, size_t len, StreamSink& 
             axis->watchdog_feed();
         }
 
+    } else if (cmd[0] == 'i' && cmd[1] == 't') { // incremental trapezoidal trajectory
+        unsigned motor_number, from_goal_point;
+        float displacement;
+        int numscan = sscanf(cmd, "it %u %f %u", &motor_number, &displacement, &from_goal_point);
+        if (numscan < 2) {
+            respond(response_channel, use_checksum, "invalid command format");
+        } else if (motor_number >= AXIS_COUNT) {
+            respond(response_channel, use_checksum, "invalid motor %u", motor_number);
+        } else {
+            if (numscan < 3)
+                from_goal_point = 1;
+            Axis* axis = axes[motor_number];
+            axis->controller_.move_incremental(displacement, from_goal_point);
+            axis->watchdog_feed();
+        }
+
     } else if (cmd[0] == 'f') { // feedback
         unsigned motor_number;
         int numscan = sscanf(cmd, "f %u", &motor_number);
