@@ -59,7 +59,13 @@ void Controller::move_to_pos(float goal_point) {
     goal_point_ = goal_point;
 }
 
-void Controller::move_incremental(float displacement, bool from_goal_point = true){
+void Controller::move_incremental(float displacement, bool from_goal_point = true) {
+    if (config_.control_mode == CTRL_MODE_VELOCITY_CONTROL) {
+        // Sync goal_point_ and pos_setpoint to encoder.pos_estimate
+        // or else the motor will move more than expected
+        goal_point_ = pos_setpoint_ = axis_->encoder_.pos_estimate_;
+    }
+
     if(from_goal_point){
         move_to_pos(goal_point_ + displacement);
     } else{
